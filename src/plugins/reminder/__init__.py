@@ -51,9 +51,8 @@ class Reminder(object):
         nick = user.split("!", 1)[0]
         messages = self.cache.get(nick)
         if messages:
-            protocol.say(channel,
-                    " # ".join([m.decode('utf-8') for m in messages]))
-            self.cache.drop(user)
+            protocol.say(channel, " # ".join(messages))
+            self.cache.drop(nick)
 
     def save_message(self, user, message):
         if not message.startswith(settings.REMINDER_COMMAND):

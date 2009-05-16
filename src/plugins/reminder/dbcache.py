@@ -2,7 +2,7 @@
 # -*- coding: utf-8
 
 
-from sqlalchemy import Column, Integer, Unicode
+from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -19,20 +19,22 @@ Session = sessionmaker(bind=engine)
 session = Session()
 Base = declarative_base()
 metadata = Base.metadata
+# hack? to allow using 8-bit bytestrings
+engine.connect().connection.connection.text_factory = str
 
 class Remind(Base):
     __tablename__ = 'plugin_reminder'
 
     id = Column(Integer, primary_key=True)
-    key = Column(Unicode(45))
-    value =  Column(Unicode)
+    key = Column(String(45))
+    value =  Column(String)
 
     def __init__(self, key, value):
         self.key = key
         self.value = value
 
     def __repr__(self):
-       return u"<Reminder('%s','%s')>" % (self.key, self.value)
+       return "<Reminder('%s','%s')>" % (self.key, self.value)
 
 
 class DbCache(icache.ICache):
@@ -41,15 +43,15 @@ class DbCache(icache.ICache):
         metadata.create_all(engine)
 
     def add(self, key, value):
-        key = key.decode('utf-8')
-        value = value.decode('utf-8')
+        key = key
+        value = value
         session.add(Remind(key=key, value=value))
 
     def get(self, key):
-        key = key.decode('utf-8')
+        key = key
         return [r.value for r in session.query(Remind).filter(Remind.key == key)]
 
     def drop(self, key):
-        key = key.decode('utf-8')
-        data = session.query(Remind).filter(Remind.key == key)
-        session.delete(data)
+        key = key
+        for data in session.query(Remind).filter(Remind.key == key):
+            session.delete(data)
