@@ -9,6 +9,7 @@ CONNECTIONS = (
 
 # set plugins that should be loaded
 PLUGINS = (
-    # 'plugins.demo.logger',
-    # 'plugins.demo.echo.handler',
+        'plugins.demo.periodic',
+        'plugins.demo.logger',
+        'plugins.demo.echo.handler',
         )
