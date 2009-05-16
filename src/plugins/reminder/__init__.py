@@ -51,8 +51,8 @@ class Reminder(object):
         nick = user.split("!", 1)[0]
         messages = self.cache.get(nick)
         if messages:
-            for message in messages:
-                protocol.say(channel, message)
+            protocol.say(channel,
+                    " # ".join([m.decode('utf-8') for m in messages]))
             self.cache.drop(user)
 
     def save_message(self, user, message):
