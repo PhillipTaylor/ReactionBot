@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
 
-import optparse
+from optparse import OptionParser
 
 from twisted.internet import reactor
 
@@ -20,8 +20,17 @@ def run_server():
     reactor.run()
 
 def main():
-    import_plugins()
-    run_server()
+    parser = OptionParser()
+    parser.add_option("-t", "--test-plugins", dest="test_plugins",
+            action="store_true", help="load plugins and quit", default=False)
+    parser.add_option("-p", "--plain", dest="plain", action="store_true",
+            help="run bot without loading plugins", default=False)
+    (options, args) = parser.parse_args()
+
+    if not options.plain:
+        import_plugins()
+    if not options.test_plugins:
+        run_server()
 
 if __name__ == '__main__':
     main()
