@@ -1,6 +1,6 @@
 from twisted.words.protocols import irc
 
-from plugger import plugg_manager
+from plugger import plugin_manager
 
 
 """
@@ -13,8 +13,8 @@ class PluggableBotProto(irc.IRCClient):
     def signedOn(self):
         "called when succesfully signed on to server"
         self.join(self.factory.channel)
-        plugg_manager.protocol = self
-        self.__dict__.update(plugg_manager.action_handlers)
+        plugin_manager.protocol = self
+        self.__dict__.update(plugin_manager.action_handlers)
 
     def connectionMade(self):
         irc.IRCClient.connectionMade(self)
@@ -25,3 +25,7 @@ class PluggableBotProto(irc.IRCClient):
     @property
     def nickname(self):
         return self.factory.nickname
+
+    @property
+    def channel(self):
+        return self.factory.channel

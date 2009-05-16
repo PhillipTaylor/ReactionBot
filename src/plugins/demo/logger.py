@@ -8,7 +8,7 @@ Example plugin that logs all private messages
 
 import time
 
-from plugger import plugg_manager
+from plugger import plugin_manager
 
 
 class MessageLogger:
@@ -27,4 +27,4 @@ class MessageLogger:
 
 message_logger = MessageLogger("/tmp/twisted_bot.log")
 
-plugg_manager.register("privmsg", message_logger.log)
+plugin_manager.register_action("privmsg", message_logger.log)

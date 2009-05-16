@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
 
+from twisted.internet import task
+
 
 class MultiHandler(object):
     """Single action handler
@@ -33,9 +35,9 @@ class PlugginManager(object):
             return self.__instance
         self.__instance = self
         self.action_handlers = {}
-        protocol = None
+        self.protocol = None
 
-    def register(self, action, *handlers):
+    def register_action(self, action, *handlers):
         "register new action handlers"
         if not action in self.action_handlers:
             self.action_handlers[action] = MultiHandler(self, action)
@@ -48,4 +50,11 @@ class PlugginManager(object):
         return self.action_handlers[action]
 
 
-plugg_manager = PlugginManager()
+    def register_periodic(self, handler, period):
+        "call handler each `period` seconds"
+        handler.manager = self
+        periodic = task.LoopingCall(handler)
+        periodic.start(period)
+
+
+plugin_manager = PlugginManager()
