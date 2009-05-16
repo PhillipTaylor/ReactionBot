@@ -3,13 +3,13 @@
 
 from twisted.internet import reactor, protocol
 
-import proto
+from protocol import PluggableBotProto
 
 
 
 class BotFactory(protocol.ClientFactory):
     "IRC bot factory"
-    protocol = proto.PluggableBotProto
+    protocol = PluggableBotProto
 
     def __init__(self, channel, nickname):
         self.channel = channel
