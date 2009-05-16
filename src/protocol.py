@@ -10,11 +10,13 @@ more info:
 
 
 class PluggableBotProto(irc.IRCClient):
+    def __init__(self):
+        plugin_manager.protocol = self
+        self.__dict__.update(plugin_manager.action_handlers)
+
     def signedOn(self):
         "called when succesfully signed on to server"
         self.join(self.factory.channel)
-        plugin_manager.protocol = self
-        self.__dict__.update(plugin_manager.action_handlers)
 
     def connectionMade(self):
         irc.IRCClient.connectionMade(self)
