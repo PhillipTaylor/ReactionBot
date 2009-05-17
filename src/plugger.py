@@ -10,18 +10,27 @@ class MultiHandler(object):
 
     Can call any number of handlers at single call
     """
-    def __init__(self, manager, action, handlers=None):
+    def __init__(self, manager, action):
         self.manager = manager
         self.action = action
-        self._handlers = handlers or []
+        self._handlers = {'__all__' : []}
 
-    def add(self, *handlers):
-        self._handlers.extend(handlers)
+    def add(self, handler, channels=None):
+        if not channels:
+            channels = ["__all__", ]
+        for channel in channels:
+            if not channel in self._handlers:
+                self._handlers[channel] = []
+            self._handlers[channel].append(handler)
         return self
 
-    def __call__(self, *args, **kwds):
-        for h in self._handlers:
-            h(*args, **kwds)
+    def __call__(self, protocol, *args, **kwds):
+        channel = protocol.channel
+        for h in self._handlers['__all__']:
+            h(protocol=protocol, *args, **kwds)
+        if channel in self._handlers:
+            for h in self._handlers[channel]:
+                h(protocol=protocol, *args, **kwds)
 
 
 
@@ -37,11 +46,11 @@ class PlugginManager(object):
         self.periodic_actions = []
         self.protocols = []
 
-    def register_action(self, action, *handlers):
+    def register_action(self, action, handler, channels=None):
         "register new action handlers"
         if not action in self.action_handlers:
             self.action_handlers[action] = MultiHandler(self, action)
-        return self.action_handlers[action].add(*handlers)
+        return self.action_handlers[action].add(handler, channels)
 
     def get_handler(self, action):
         "returns list of handlers for given action"
