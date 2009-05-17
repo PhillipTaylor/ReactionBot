@@ -15,10 +15,12 @@ class MessageLogger:
     def __init__(self, path):
         self.file = open(path, "a")
 
-    def log(self, user, channel, message, protocol):
+    def log(self, protocol, user, channel, message, *params):
         "write a message to the file"
         timestamp = time.strftime("[%H:%M:%S]", time.localtime(time.time()))
-        self.file.write('%s %s\n' % (timestamp, message))
+        nick = user.split("!", 1)[0]
+        self.file.write('(#%s) %s %s: %s\n' % \
+                (protocol.channel, timestamp, nick, message))
         self.file.flush()
 
     def close(self):

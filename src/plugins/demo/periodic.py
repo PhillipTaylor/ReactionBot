@@ -12,16 +12,27 @@ class PeriodicAction(object):
         self.last_call = datetime.datetime.now()
 
     def __call__(self):
-        if self.manager.protocol:
-            self.periodic_action()
+        self.periodic_action()
 
     def periodic_action(self):
         now = datetime.datetime.now()
         message = "periodic in action: %s (last call: %s)" % \
                 (now, self.last_call)
-        self.manager.protocol.say(self.manager.protocol.channel, message)
+        for protocol in self.protocols:
+            protocol.say(protocol.channel, message)
         self.last_call = now
 
 
+class CustomChannelPeriodic(object):
+    def __call__(self):
+        for protocol in self.protocols:
+            protocol.say(protocol.channel, "hello world!")
+
+
 action = PeriodicAction()
-plugin_manager.register_periodic(action, 15)
+custom_action = CustomChannelPeriodic()
+
+# this will send message to all channels
+plugin_manager.register_periodic(action, 20)
+# this periodic will be visible only on choosen channels
+plugin_manager.register_periodic(custom_action, 20, channels=['test_bot', ])

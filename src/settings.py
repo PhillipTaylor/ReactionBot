@@ -9,6 +9,7 @@
 # set all your connections here
 CONNECTIONS = (
         ('irc.freenode.net', 6667, 'test_bot', 'twistedbot'),
+        #('irc.freenode.net', 6667, 'test_bot_2', 'twistedbot2'),
         )
 
 # set plugins that should be loaded

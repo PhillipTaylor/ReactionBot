@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: utf-8
+
+
 from twisted.words.protocols import irc
 
 from plugger import plugin_manager
@@ -11,8 +15,7 @@ more info:
 
 class PluggableBotProto(irc.IRCClient):
     def __init__(self):
-        plugin_manager.protocol = self
-        self.__dict__.update(plugin_manager.action_handlers)
+        plugin_manager.protocols.append(self)
 
     def signedOn(self):
         "called when succesfully signed on to server"
@@ -23,6 +26,14 @@ class PluggableBotProto(irc.IRCClient):
 
     def connectionLost(self, reason):
         irc.IRCClient.connectionLost(self, reason)
+
+    def handleCommand(self, command, prefix, params):
+        plugin_handler = plugin_manager.get_handler(command.lower())
+        if plugin_handler:
+            channel, message = params[:2]
+            plugin_handler(protocol=self, user=prefix, \
+                    channel=channel, message=message, *params[2:])
+        irc.IRCClient.handleCommand(self, command, prefix, params)
 
     @property
     def nickname(self):

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
 
+
 from twisted.internet import task
 
 
@@ -19,8 +20,6 @@ class MultiHandler(object):
         return self
 
     def __call__(self, *args, **kwds):
-        if not 'protocol' in kwds:
-            kwds['protocol'] = self.manager.protocol
         for h in self._handlers:
             h(*args, **kwds)
 
@@ -35,7 +34,8 @@ class PlugginManager(object):
             return self.__instance
         self.__instance = self
         self.action_handlers = {}
-        self.protocol = None
+        self.periodic_actions = []
+        self.protocols = []
 
     def register_action(self, action, *handlers):
         "register new action handlers"
@@ -50,11 +50,22 @@ class PlugginManager(object):
         return self.action_handlers[action]
 
 
-    def register_periodic(self, handler, period):
+    def register_periodic(self, handler, period, channels=None):
+        """Collect all periodic actions, but do not run them untill some
+        protocol instances will be set
+        """
+        self.periodic_actions.append((handler, period, channels))
+
+    def start_periodics(self):
         "call handler each `period` seconds"
-        handler.manager = self
-        periodic = task.LoopingCall(handler)
-        periodic.start(period)
+        for (handler, period, channels) in self.periodic_actions:
+            if not channels:
+                handler.protocols = self.protocols[:]
+            else:
+                handler.protocols = filter(
+                        lambda p: p.channel in channels, self.protocols)
+            periodic = task.LoopingCall(handler)
+            periodic.start(period)
 
 
 plugin_manager = PlugginManager()

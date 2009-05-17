@@ -5,7 +5,7 @@
 from plugger import plugin_manager
 
 
-def echo(user, channel, message, protocol):
+def echo(protocol, user, channel, message, *params):
     nick = user.split("!", 1)[0]
     protocol.say(channel, "%s: %s" % (nick, message))
 
