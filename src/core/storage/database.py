@@ -24,7 +24,7 @@ class FileStorage(object):
     def get(self, key):
         """Get data or None if does not exist"""
         if not key in self.data:
-            return ''
+            return None
         return self.data[key]
 
     def set(self, key, value):
@@ -37,11 +37,8 @@ class FileStorage(object):
             dump_file.write(data)
 
     def load(self):
-        if not os.path.isfile(DUMP_FILE):
-            return
         try:
             with open(DUMP_FILE, "rb") as dump_file:
                 self.data = pickle.loads(dump_file.read())
         except IOError:
-            pass
-
+            return {}

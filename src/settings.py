@@ -15,6 +15,7 @@ CONNECTIONS = (
 # set plugins that should be loaded
 PLUGINS = (
         #'plugins.reminder',
+        #'plugins.feedreader',
 
         #'plugins.demo.periodic',
         #'plugins.demo.logger',

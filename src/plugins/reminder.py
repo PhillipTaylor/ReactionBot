@@ -27,6 +27,8 @@ class Reminder(object):
         self.mem = {}
 
     def loads(self, data):
+        if not data:
+            return
         self.mem = pickle.loads(data)
 
     def dumps(self):
