@@ -11,31 +11,26 @@ Usage:
 """
 
 import datetime
+import pickle
 
 import settings
-import memorycache
-from plugger import plugin_manager
+from core.plugins.manager import plugin_manager
 
-if not hasattr(settings, "REMINDER_COMMAND"):
-    setattr(settings, "REMINDER_COMMAND", ":msg ")
-if not hasattr(settings, "REMINDER_FORMAT"):
-    setattr(settings, "REMINDER_FORMAT",
+
+MSG_COMMAND = getattr(settings, "REMINDER_COMMAND", ":msg ")
+MSG_FORMAT = getattr(settings, "REMINDER_FORMAT",
             "%(author)s: [%(date)s] %(to)s powiedział: %(message)s")
-
-
-cache = memorycache.MemoryCache()
-if hasattr(settings, 'DATABASE_ENGINE'):
-    try:
-        import dbcache
-        cache = dbcache.DbCache()
-    except ImportError:
-        pass
-
 
 
 class Reminder(object):
     def __init__(self):
-        self.cache = cache
+        self.mem = {}
+
+    def loads(self, data):
+        self.mem = pickle.loads(data)
+
+    def dumps(self):
+        return pickle.dumps(self.mem)
 
     def on_user_joined(self, user, channel, protocol):
         self.check_messages(user, channel, protocol)
@@ -49,24 +44,32 @@ class Reminder(object):
 
     def check_messages(self, user, channel, protocol):
         nick = user.split("!", 1)[0]
-        messages = self.cache.get(nick)
-        if messages:
-            protocol.say(channel, " # ".join(messages))
-            self.cache.drop(nick)
+        if nick in self.mem:
+            protocol.say(channel,
+                    " # ".join((MSG_FORMAT % m for m in self.mem[nick])))
+            del self.mem[nick]
 
     def save_message(self, user, message):
-        if not message.startswith(settings.REMINDER_COMMAND):
+        if not message.startswith(MSG_COMMAND):
             return
-        send_to, message = message[len(settings.REMINDER_COMMAND):].split(' ', 1)
-        log = settings.REMINDER_FORMAT % {
+        message = message[len(MSG_COMMAND):].strip()
+        send_to, message = message.split(' ', 1)
+        if not send_to in self.mem:
+            self.mem[send_to] = []
+        self.mem[send_to].append( {
                     "author": user.split("!", 1)[0],
                     "date": datetime.datetime.now(),
                     "to": send_to,
                     "message": message,
-                }
-        cache.add(send_to, log)
+                })
 
 
 reminder = Reminder()
+
+# use plugin manager storage system
+plugin_manager.register_storable(id='plugin.reminder',
+        loader=reminder.loads, dumper=reminder.dumps)
+
+# register chooser action handlers
 plugin_manager.register_action('userJoined', reminder.on_user_joined)
 plugin_manager.register_action('privmsg', reminder.on_privmsg)

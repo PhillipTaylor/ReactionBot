@@ -3,6 +3,7 @@
 
 
 from twisted.internet import task
+from core.storage.database import FileStorage
 
 
 class MultiHandler(object):
@@ -32,6 +33,12 @@ class MultiHandler(object):
             for h in self._handlers[channel]:
                 h(protocol=protocol, *args, **kwds)
 
+    def get_handlers(self):
+        handlers = []
+        for c in self._handlers:
+            handlers.extend(self._handlers[c])
+        return handlers
+
 
 
 class PlugginManager(object):
@@ -42,6 +49,7 @@ class PlugginManager(object):
         if self.__instance:
             return self.__instance
         self.__instance = self
+        self._storable_plugins = []
         self.action_handlers = {}
         self.periodic_actions = []
         self.protocols = []
@@ -75,6 +83,26 @@ class PlugginManager(object):
                         lambda p: p.channel in channels, self.protocols)
             periodic = task.LoopingCall(handler)
             periodic.start(period)
+
+    def register_storable(self, loader, dumper, id):
+        self._storable_plugins.append({
+            'loader': loader,
+            'dumper': dumper,
+            'id': id,
+            })
+
+    def plugins_initialize(self):
+        db = FileStorage()
+        db.load()
+        for p in self._storable_plugins:
+            p['loader'](db.get(p['id']))
+
+    def plugins_finalize(self):
+        "finalize plugins"
+        db = FileStorage()
+        for p in self._storable_plugins:
+            db.set(p['id'], p['dumper']())
+        db.dump()
 
 
 plugin_manager = PlugginManager()

@@ -4,7 +4,7 @@
 
 import datetime
 
-from plugger import plugin_manager
+from core.plugins.manager import plugin_manager
 
 
 class PeriodicAction(object):

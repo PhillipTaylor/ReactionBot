@@ -8,7 +8,7 @@ Example plugin that logs all private messages
 
 import time
 
-from plugger import plugin_manager
+from core.plugins.manager import plugin_manager
 
 
 class MessageLogger:

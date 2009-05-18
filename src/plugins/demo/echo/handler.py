@@ -2,7 +2,7 @@
 # -*- coding: utf-8
 
 
-from plugger import plugin_manager
+from core.plugins.manager import plugin_manager
 
 
 def echo(protocol, user, channel, message, *params):

@@ -6,7 +6,7 @@ from optparse import OptionParser
 from twisted.internet import reactor
 
 from factory import BotFactory
-from plugger import plugin_manager
+from core.plugins.manager import plugin_manager
 import settings
 
 
@@ -29,11 +29,15 @@ def main():
             help="run bot without loading plugins", default=False)
     (options, args) = parser.parse_args()
 
-    if not options.plain:
-        import_plugins()
-    if not options.test_plugins:
-        run_server()
+    try:
+        if not options.plain:
+            import_plugins()
+        plugin_manager.plugins_initialize()
+        if not options.test_plugins:
+            run_server()
+    finally:
+        plugin_manager.plugins_finalize()
+
 
 if __name__ == '__main__':
     main()
-

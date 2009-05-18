@@ -4,7 +4,7 @@
 
 from twisted.words.protocols import irc
 
-from plugger import plugin_manager
+from core.plugins.manager import plugin_manager
 
 
 """
