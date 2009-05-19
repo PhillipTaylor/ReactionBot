@@ -42,13 +42,14 @@ class MultiHandler(object):
 
 
 class PlugginManager(object):
-    """Plugin manager singleton"""
-    __instance = False
+    __instance = None
+
+    def __new__(cls):
+        if not PlugginManager.__instance:
+            PlugginManager.__instance = object.__new__(cls)
+        return PlugginManager.__instance
 
     def __init__(self):
-        if self.__instance:
-            return self.__instance
-        self.__instance = self
         self._storable_plugins = []
         self.action_handlers = {}
         self.periodic_actions = []
@@ -85,6 +86,10 @@ class PlugginManager(object):
             periodic.start(period)
 
     def register_storable(self, loader, dumper, id):
+        """Register storable object with given *unique* id
+
+        Attribute objects should both be callable.
+        """
         self._storable_plugins.append({
             'loader': loader,
             'dumper': dumper,
@@ -92,13 +97,20 @@ class PlugginManager(object):
             })
 
     def plugins_initialize(self):
+        """Do initialize all plugins
+
+        For now, call all loader handlers
+        """
         db = FileStorage()
         db.load()
         for p in self._storable_plugins:
             p['loader'](db.get(p['id']))
 
     def plugins_finalize(self):
-        "finalize plugins"
+        """Do finalize all plugins
+
+        For now, call all dumper handlers
+        """
         db = FileStorage()
         for p in self._storable_plugins:
             db.set(p['id'], p['dumper']())
