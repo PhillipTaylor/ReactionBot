@@ -20,4 +20,4 @@ PLUGINS = (
         #'plugins.demo.periodic',
         #'plugins.demo.logger',
         #'plugins.demo.echo.handler',
-        )
+    )

@@ -13,8 +13,13 @@ Usage:
 import datetime
 import pickle
 
+from zope.interface import implements
+
 import settings
 from core.plugins.manager import plugin_manager
+from core.plugins.interface import IStorable, IActionHandler
+from core.plugins.interface import ICustomChannelsHandler
+
 
 
 MSG_COMMAND = getattr(settings, "REMINDER_COMMAND", ":msg ")
@@ -23,31 +28,37 @@ MSG_FORMAT = getattr(settings, "REMINDER_FORMAT",
 
 
 class Reminder(object):
-    def __init__(self):
+
+    implements(IStorable, IActionHandler, ICustomChannelsHandler)
+
+    def __init__(self, name, channels):
         self.mem = {}
+        self.name = name
+        self.channels = channels
 
-    def loads(self, data):
-        if not data:
-            return
-        self.mem = pickle.loads(data)
+    def load(self, data):
+        if data:
+            self.mem = pickle.loads(data)
 
-    def dumps(self):
+    def dump(self):
         return pickle.dumps(self.mem)
 
-    def on_user_joined(self, user, channel, protocol):
-        self.check_messages(user, channel, protocol)
+    def accepts_channel(self, channel):
+        return channel in self.channels
 
-    def on_privmsg(self, user, channel, message, protocol):
-        self.check_messages(user, channel, protocol)
-        try:
+    def accepts_action(self, action):
+        return action in ['privmsg', 'join']
+
+
+    def handle_action(self, protocol, action, user, message):
+        self.check_messages(protocol, user)
+        if action == 'privmsg':
             self.save_message(user, message)
-        except ValueError:
-            pass
 
-    def check_messages(self, user, channel, protocol):
+    def check_messages(self, protocol, user):
         nick = user.split("!", 1)[0]
         if nick in self.mem:
-            protocol.say(channel,
+            protocol.say(protocol.channel,
                     " # ".join((MSG_FORMAT % m for m in self.mem[nick])))
             del self.mem[nick]
 
@@ -66,12 +77,9 @@ class Reminder(object):
                 })
 
 
-reminder = Reminder()
+reminder_1 = Reminder(name='reminder.first', channels=['test_bot', ])
+reminder_2 = Reminder(name='reminder.second',
+        channels=['test_bot_2', 'test_bot_3'])
 
-# use plugin manager storage system
-plugin_manager.register_storable(id='plugin.reminder',
-        loader=reminder.loads, dumper=reminder.dumps)
-
-# register chooser action handlers
-plugin_manager.register_action('userJoined', reminder.on_user_joined)
-plugin_manager.register_action('privmsg', reminder.on_privmsg)
+plugin_manager.register(reminder_1)
+plugin_manager.register(reminder_2)

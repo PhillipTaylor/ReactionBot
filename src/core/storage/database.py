@@ -1,12 +1,12 @@
 # -*- coding: utf-8
 
 import pickle
-import os
 
 import settings
 
 
 DUMP_FILE = getattr(settings, "DUMP_FILE", "dump_file.pickle")
+
 
 
 class FileStorage(object):
@@ -42,3 +42,7 @@ class FileStorage(object):
                 self.data = pickle.loads(dump_file.read())
         except IOError:
             return {}
+
+
+storage = FileStorage()
+storage.load()

@@ -6,7 +6,6 @@ from twisted.internet import reactor, protocol
 from protocol import PluggableBotProto
 
 
-
 class BotFactory(protocol.ClientFactory):
     "IRC bot factory"
     protocol = PluggableBotProto

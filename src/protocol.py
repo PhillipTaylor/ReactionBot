@@ -1,10 +1,11 @@
-#!/usr/bin/env python
 # -*- coding: utf-8
 
 
 from twisted.words.protocols import irc
 
 from core.plugins.manager import plugin_manager
+from core.plugins.interface import IInitialize, IFinalize, IStorable
+from core.storage.database import storage
 
 
 """
@@ -14,26 +15,43 @@ more info:
 
 
 class PluggableBotProto(irc.IRCClient):
-    def __init__(self):
-        plugin_manager.protocols.append(self)
 
     def signedOn(self):
         "called when succesfully signed on to server"
         self.join(self.factory.channel)
-
-    def connectionMade(self):
-        irc.IRCClient.connectionMade(self)
+        plugins = plugin_manager.filter(
+                channel=self.channel, interface=IInitialize)
+        for plugin in plugins:
+            plugin.initialize()
+        plugins = plugin_manager.filter(
+                channel=self.channel, interface=IStorable)
+        for plugin in plugins:
+            data = storage.get(plugin.name)
+            if data:
+                plugin.load(data)
 
     def connectionLost(self, reason):
+        plugins = plugin_manager.filter(
+                channel=self.channel, interface=IFinalize)
+        for plugin in plugins:
+            plugin.finalize()
+        plugins = plugin_manager.filter(
+                channel=self.channel, interface=IStorable)
+        for plugin in plugins:
+            storage.set(plugin.name, plugin.dump())
+        storage.dump()
         irc.IRCClient.connectionLost(self, reason)
 
     def handleCommand(self, command, prefix, params):
-        plugin_handler = plugin_manager.get_handler(command.lower())
-        if plugin_handler:
-            channel, message = params[:2]
-            plugin_handler(protocol=self, user=prefix, \
-                    channel=channel, message=message, *params[2:])
+        """Call approppriate plugins with given command"""
         irc.IRCClient.handleCommand(self, command, prefix, params)
+        if len(params) < 2:
+            return
+        plugins = plugin_manager.filter(
+                channel=self.channel, action=command.lower())
+        for plugin in plugins:
+            plugin.handle_action(protocol=self, action=command.lower(),
+                    user=prefix, message=params[1])
 
     @property
     def nickname(self):

@@ -2,119 +2,68 @@
 # -*- coding: utf-8
 
 
-from twisted.internet import task
-from core.storage.database import FileStorage
+from core.plugins.interface import IPlugin, IActionHandler
+from core.plugins.interface import ICustomChannelsHandler
 
 
-class MultiHandler(object):
-    """Single action handler
+def _filter_interface(plugins, interface):
+    return filter(lambda p: interface.providedBy(p), plugins)
 
-    Can call any number of handlers at single call
+def _filter_action(plugins, action):
+    """Returns list of plugins that should handle given action."""
+    plugins = _filter_interface(plugins, IActionHandler)
+    return filter(lambda p: p.accepts_action(action), plugins)
+
+def _filter_channel(plugins, channel):
+    """Returns list of plugins that should handle action on given channel.
+
+    If plugin does not implement ICustomChannelsHandler, it means it should
+    handle signals from all channels.
     """
-    def __init__(self, manager, action):
-        self.manager = manager
-        self.action = action
-        self._handlers = {'__all__' : []}
+    f_plugins = []
+    for p in plugins:
+        if ICustomChannelsHandler.providedBy(p):
+            if p.accepts_channel(channel):
+                f_plugins.append(p)
+        else:
+            f_plugins.append(p)
+    return f_plugins
 
-    def add(self, handler, channels=None):
-        if not channels:
-            channels = ["__all__", ]
-        for channel in channels:
-            if not channel in self._handlers:
-                self._handlers[channel] = []
-            self._handlers[channel].append(handler)
-        return self
-
-    def __call__(self, protocol, *args, **kwds):
-        channel = protocol.channel
-        for h in self._handlers['__all__']:
-            h(protocol=protocol, *args, **kwds)
-        if channel in self._handlers:
-            for h in self._handlers[channel]:
-                h(protocol=protocol, *args, **kwds)
-
-    def get_handlers(self):
-        handlers = []
-        for c in self._handlers:
-            handlers.extend(self._handlers[c])
-        return handlers
-
+def _filter_name(plugins, name):
+    return filter(lambda p: p.name == name, plugins)
 
 
 class PlugginManager(object):
+    """Singleton plugin manager"""
     __instance = None
 
     def __new__(cls):
+        """Keep this class singleton"""
         if not PlugginManager.__instance:
             PlugginManager.__instance = object.__new__(cls)
         return PlugginManager.__instance
 
     def __init__(self):
-        self._storable_plugins = []
-        self.action_handlers = {}
-        self.periodic_actions = []
-        self.protocols = []
+        self._plugins = []
 
-    def register_action(self, action, handler, channels=None):
-        "register new action handlers"
-        if not action in self.action_handlers:
-            self.action_handlers[action] = MultiHandler(self, action)
-        return self.action_handlers[action].add(handler, channels)
+    def register(self, plugin):
+        """Register new object, that implements IPlugin interface."""
+        if not IPlugin.providedBy(plugin):
+            raise TypeError("Plugin interface not implemented by %s" % plugin)
+        self._plugins.append(plugin)
 
-    def get_handler(self, action):
-        "returns list of handlers for given action"
-        if not action in self.action_handlers:
-            return None
-        return self.action_handlers[action]
-
-
-    def register_periodic(self, handler, period, channels=None):
-        """Collect all periodic actions, but do not run them untill some
-        protocol instances will be set
-        """
-        self.periodic_actions.append((handler, period, channels))
-
-    def start_periodics(self):
-        "call handler each `period` seconds"
-        for (handler, period, channels) in self.periodic_actions:
-            if not channels:
-                handler.protocols = self.protocols[:]
-            else:
-                handler.protocols = filter(
-                        lambda p: p.channel in channels, self.protocols)
-            periodic = task.LoopingCall(handler)
-            periodic.start(period)
-
-    def register_storable(self, loader, dumper, id):
-        """Register storable object with given *unique* id
-
-        Attribute objects should both be callable.
-        """
-        self._storable_plugins.append({
-            'loader': loader,
-            'dumper': dumper,
-            'id': id,
-            })
-
-    def plugins_initialize(self):
-        """Do initialize all plugins
-
-        For now, call all loader handlers
-        """
-        db = FileStorage()
-        db.load()
-        for p in self._storable_plugins:
-            p['loader'](db.get(p['id']))
-
-    def plugins_finalize(self):
-        """Do finalize all plugins
-
-        For now, call all dumper handlers
-        """
-        db = FileStorage()
-        for p in self._storable_plugins:
-            db.set(p['id'], p['dumper']())
-        db.dump()
+    def filter(self, action=None, channel=None, interface=None, name=None):
+        """Returns list of plugins, filtered by given arguments."""
+        plugins = self._plugins
+        if interface:
+            plugins = _filter_interface(plugins, interface)
+        if action:
+            plugins = _filter_action(plugins, action)
+        if channel:
+            plugins = _filter_channel(plugins, channel)
+        if name:
+            plugins = _filter_name(plugins, name)
+        return plugins
 
 
 plugin_manager = PlugginManager()

@@ -6,16 +6,34 @@
 Example plugin that logs all private messages
 """
 
+
 import time
 
+from zope.interface import implements
+
+from core.plugins.interface import IActionHandler, IInitialize, IFinalize
 from core.plugins.manager import plugin_manager
 
 
-class MessageLogger:
-    def __init__(self, path):
-        self.file = open(path, "a")
 
-    def log(self, protocol, user, channel, message, *params):
+class MessageLogger(object):
+
+    implements(IActionHandler, IInitialize, IFinalize)
+
+    def __init__(self, path):
+        self.log_path = path
+        self.name = "message_logger"
+
+    def initialize(self):
+        self.file = open(self.log_path, "a")
+
+    def finalize(self):
+        self.file.close()
+
+    def accepts_action(self, action):
+        return action in ['privmsg', 'ping', 'join']
+
+    def handle_action(self, protocol, action, user, message):
         "write a message to the file"
         timestamp = time.strftime("[%H:%M:%S]", time.localtime(time.time()))
         nick = user.split("!", 1)[0]
@@ -23,10 +41,6 @@ class MessageLogger:
                 (protocol.channel, timestamp, nick, message))
         self.file.flush()
 
-    def close(self):
-        self.file.close()
 
-
-message_logger = MessageLogger("/tmp/twisted_bot.log")
-
-plugin_manager.register_action("privmsg", message_logger.log)
+logger = MessageLogger("/tmp/message_logger.log")
+plugin_manager.register(logger)

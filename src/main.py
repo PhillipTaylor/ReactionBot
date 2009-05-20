@@ -18,7 +18,7 @@ def run_server():
     for (server, port, channel, nickname) in settings.CONNECTIONS:
         factory = BotFactory(channel, nickname)
         reactor.connectTCP(server, port, factory)
-    reactor.callLater(5, plugin_manager.start_periodics)
+    #reactor.callLater(5, plugin_manager.start_periodics)
     reactor.run()
 
 def main():
@@ -29,14 +29,10 @@ def main():
             help="run bot without loading plugins", default=False)
     (options, args) = parser.parse_args()
 
-    try:
-        if not options.plain:
-            import_plugins()
-        plugin_manager.plugins_initialize()
-        if not options.test_plugins:
-            run_server()
-    finally:
-        plugin_manager.plugins_finalize()
+    if not options.plain:
+        import_plugins()
+    if not options.test_plugins:
+        run_server()
 
 
 if __name__ == '__main__':
