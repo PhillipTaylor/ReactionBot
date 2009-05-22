@@ -51,9 +51,9 @@ class Reminder(object):
 
 
     def handle_action(self, protocol, action, user, message):
-        self.check_messages(protocol, user)
         if action == 'privmsg':
             self.save_message(user, message)
+        self.check_messages(protocol, user)
 
     def check_messages(self, protocol, user):
         nick = user.split("!", 1)[0]
@@ -67,10 +67,14 @@ class Reminder(object):
             return
         message = message[len(MSG_COMMAND):].strip()
         send_to, message = message.split(' ', 1)
+        author = user.split("!", 1)[0]
+        if send_to == author:
+            # do not save self sended messages
+            return
         if not send_to in self.mem:
             self.mem[send_to] = []
         self.mem[send_to].append( {
-                    "author": user.split("!", 1)[0],
+                    "author": author,
                     "date": datetime.datetime.now(),
                     "to": send_to,
                     "message": message,

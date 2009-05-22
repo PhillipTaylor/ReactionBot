@@ -4,35 +4,31 @@
 
 import datetime
 
+from zope.interface import implements
+
 from core.plugins.manager import plugin_manager
+from core.plugins.interface import IPeriodic
 
 
 class PeriodicAction(object):
-    def __init__(self):
-        self.last_call = datetime.datetime.now()
 
-    def __call__(self):
-        self.periodic_action()
+    implements(IPeriodic)
 
-    def periodic_action(self):
-        now = datetime.datetime.now()
-        message = "periodic in action: %s (last call: %s)" % \
-                (now, self.last_call)
-        for protocol in self.protocols:
-            protocol.say(protocol.channel, message)
-        self.last_call = now
+    def __init__(self, sleep_time, max_calls):
+        self.name = "periodic_%s" % datetime.datetime.now()
+        self.call_counter = 0
+        self.max_calls = max_calls
+        self.sleep_time = sleep_time
 
-
-class CustomChannelPeriodic(object):
-    def __call__(self):
-        for protocol in self.protocols:
-            protocol.say(protocol.channel, "hello world!")
+    def periodic_handler(self, protocols):
+        self.call_counter += 1
+        for protocol in protocols:
+            protocol.say(protocol.channel,
+                    "periodic call nr: %d" % self.call_counter)
+        if self.call_counter >= self.max_calls:
+            self.loop.stop()
 
 
-action = PeriodicAction()
-custom_action = CustomChannelPeriodic()
 
-# this will send message to all channels
-plugin_manager.register_periodic(action, 20)
-# this periodic will be visible only on choosen channels
-plugin_manager.register_periodic(custom_action, 20, channels=['test_bot', ])
+action = PeriodicAction(5, 3)
+plugin_manager.register(action)

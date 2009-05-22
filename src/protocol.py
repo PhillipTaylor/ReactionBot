@@ -3,7 +3,7 @@
 
 from twisted.words.protocols import irc
 
-from core.plugins.manager import plugin_manager
+from core.plugins.manager import plugin_manager, protocol_manager
 from core.plugins.interface import IInitialize, IFinalize, IStorable
 from core.storage.database import storage
 
@@ -29,6 +29,7 @@ class PluggableBotProto(irc.IRCClient):
             data = storage.get(plugin.name)
             if data:
                 plugin.load(data)
+        protocol_manager.register(self)
 
     def connectionLost(self, reason):
         plugins = plugin_manager.filter(
@@ -40,6 +41,7 @@ class PluggableBotProto(irc.IRCClient):
         for plugin in plugins:
             storage.set(plugin.name, plugin.dump())
         storage.dump()
+        protocol_manager.unregister(self)
         irc.IRCClient.connectionLost(self, reason)
 
     def handleCommand(self, command, prefix, params):

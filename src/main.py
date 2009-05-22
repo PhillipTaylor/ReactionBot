@@ -5,8 +5,8 @@ from optparse import OptionParser
 
 from twisted.internet import reactor
 
-from factory import BotFactory
 from core.plugins.manager import plugin_manager
+from factory import BotFactory
 import settings
 
 
@@ -18,7 +18,7 @@ def run_server():
     for (server, port, channel, nickname) in settings.CONNECTIONS:
         factory = BotFactory(channel, nickname)
         reactor.connectTCP(server, port, factory)
-    #reactor.callLater(5, plugin_manager.start_periodics)
+    reactor.callLater(5, plugin_manager.start_periodics)
     reactor.run()
 
 def main():

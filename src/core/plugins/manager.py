@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
 
+from twisted.internet.task import LoopingCall
 
-from core.plugins.interface import IPlugin, IActionHandler
+from core.plugins.interface import IPlugin, IActionHandler, IPeriodic
 from core.plugins.interface import ICustomChannelsHandler
 
 
@@ -65,5 +66,30 @@ class PlugginManager(object):
             plugins = _filter_name(plugins, name)
         return plugins
 
+    def start_periodics(self):
+        for periodic in self.filter(interface=IPeriodic):
+            if hasattr(periodic, "loop"):
+                continue
+            p = LoopingCall(periodic.periodic_handler, protocol_manager)
+            periodic.loop = p
+            p.start(periodic.sleep_time)
+
 
 plugin_manager = PlugginManager()
+
+
+class ProtocolManager(list):
+    def register(self, protocol):
+        self.append(protocol)
+
+    def filter(self, channels=None):
+        protocols = self
+        if channels:
+            protocols = filter(lambda p: p.channel in channels, protocols)
+        return protocols
+
+    def unregister(self, protocol):
+        self.remove(protocol)
+
+
+protocol_manager = ProtocolManager()
