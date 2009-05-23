@@ -89,7 +89,11 @@ class ProtocolManager(list):
         return protocols
 
     def unregister(self, protocol):
-        self.remove(protocol)
+        try:
+            self.remove(protocol)
+            return True
+        except ValueError:
+            return False
 
 
 protocol_manager = ProtocolManager()

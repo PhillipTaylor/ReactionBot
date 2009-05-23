@@ -5,6 +5,7 @@ from twisted.words.protocols import irc
 
 from core.plugins.manager import plugin_manager, protocol_manager
 from core.plugins.interface import IInitialize, IFinalize, IStorable
+from core.plugins.interface import ILineReceiver
 from core.storage.database import storage
 
 
@@ -54,6 +55,12 @@ class PluggableBotProto(irc.IRCClient):
         for plugin in plugins:
             plugin.handle_action(protocol=self, action=command.lower(),
                     user=prefix, message=params[1])
+
+    def lineReceived(self, line):
+        plugins = plugin_manager.filter(interface=ILineReceiver)
+        for plugin in plugins:
+            plugin.handle_line(self, line)
+        irc.IRCClient.lineReceived(self, line)
 
     @property
     def nickname(self):
