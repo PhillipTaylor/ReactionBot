@@ -18,6 +18,7 @@ CONNECTIONS = (
 PLUGINS = (
         #'plugins.reminder',
         #'plugins.feedreader',
+        #'plugins.show_page_title',
 
         #'plugins.demo.periodic',
         #'plugins.demo.logger',
