@@ -24,7 +24,7 @@ from core.plugins.interface import ICustomChannelsHandler
 
 MSG_COMMAND = getattr(settings, "REMINDER_COMMAND", ":msg ")
 MSG_FORMAT = getattr(settings, "REMINDER_FORMAT",
-            "%(author)s: [%(date)s] %(to)s powiedział: %(message)s")
+            "%(to)s: [%(date)s] %(author)s powiedział: %(message)s")
 
 
 class Reminder(object):

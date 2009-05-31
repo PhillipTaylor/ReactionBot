@@ -19,6 +19,7 @@ PLUGINS = (
         #'plugins.reminder',
         #'plugins.feedreader',
         #'plugins.show_page_title',
+        #'plugins.logger',
 
         #'plugins.demo.periodic',
         #'plugins.demo.logger',
