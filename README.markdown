@@ -7,7 +7,6 @@ Required:
 
  * Python >= 2.6
  * [twisted](http://twistedmatrix.com/) library
- * [twisted-words](http://twistedmatrix.com/trac/wiki/TwistedWords)
  * [zope-interface](http://pypi.python.org/pypi/zope.interface)
 
 

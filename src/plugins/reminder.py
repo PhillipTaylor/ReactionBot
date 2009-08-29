@@ -18,7 +18,6 @@ from zope.interface import implements
 import settings
 from core.plugins.manager import plugin_manager
 from core.plugins.interface import IStorable, IActionHandler
-from core.plugins.interface import ICustomChannelsHandler
 
 
 
@@ -29,12 +28,11 @@ MSG_FORMAT = getattr(settings, "REMINDER_FORMAT",
 
 class Reminder(object):
 
-    implements(IStorable, IActionHandler, ICustomChannelsHandler)
+    implements(IStorable, IActionHandler)
 
-    def __init__(self, name, channels):
+    def __init__(self, name):
         self.mem = {}
         self.name = name
-        self.channels = channels
 
     def load(self, data):
         if data:
@@ -43,12 +41,8 @@ class Reminder(object):
     def dump(self):
         return pickle.dumps(self.mem)
 
-    def accepts_channel(self, channel):
-        return channel in self.channels
-
     def accepts_action(self, action):
         return action in ['privmsg', 'join']
-
 
     def handle_action(self, protocol, action, user, message):
         if action == 'privmsg':
@@ -81,9 +75,6 @@ class Reminder(object):
                 })
 
 
-reminder_1 = Reminder(name='reminder.first', channels=['test_bot', ])
-reminder_2 = Reminder(name='reminder.second',
-        channels=['test_bot_2', 'test_bot_3'])
+reminder = Reminder(name='reminder')
 
-plugin_manager.register(reminder_1)
-plugin_manager.register(reminder_2)
+plugin_manager.register(reminder)
