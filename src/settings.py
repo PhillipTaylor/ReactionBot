@@ -20,6 +20,7 @@ PLUGINS = (
         #'plugins.feedreader',
         #'plugins.show_page_title',
         #'plugins.logger',
+        #'plugins.nastywords',
 
         #'plugins.demo.periodic',
         #'plugins.demo.logger',
