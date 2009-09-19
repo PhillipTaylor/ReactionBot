@@ -9,10 +9,6 @@ from zope.interface import implements
 from core.plugins.manager import plugin_manager
 from core.plugins.interface import IStorable, IActionHandler
 
-from twisted.python import log
-import sys
-log.startLogging(sys.stdout)
-
 
 CMD_BAN = ':ban '
 CMD_LIST = ':banlist '
