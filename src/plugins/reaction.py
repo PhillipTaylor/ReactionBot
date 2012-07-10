@@ -32,6 +32,7 @@ class Reaction(object):
                     self.image_dictionary[match_string] = urls.split(' ')
 
         logfile.close()
+        print "%d images available" % len(self.image_dictionary)
 
     def accepts_action(self, action):
         return action in ['privmsg', 'login', 'quit', 'exit']
@@ -40,14 +41,14 @@ class Reaction(object):
         nick = user.split("!", 1)[0]
 
         for key in self.image_dictionary.keys():
-            if (message.find(key) != -1):
+            if (message.lower().find(key.lower()) != -1):
                 self.match_found(protocol, user, message, key)
                 break
 
     def match_found(self, protocol, user, orig_message, match):
 
-        # require a new word inorder to talk
-        if user != "phill":
+        if (orig_message.find("ReactionBot") == -1):
+            # require a new word inorder to talk
             if self.last_match is not None:
                 if self.last_match == match:
                     return
@@ -59,13 +60,15 @@ class Reaction(object):
                     print "too early to reply"
                     return
 
+        print "match: %s" % match
         urls = self.image_dictionary[match]
 
         # pick a url from the list at random
         url = choice(urls)
 
         ret_msg = "%s -> %s" % (match, url)
-        print "message %s from %s triggered %s" % (
+        print "[%s] message %s from %s triggered %s" % (
+            datetime.datetime.now().strftime('%H:%M'),
             orig_message,
             user,
             ret_msg

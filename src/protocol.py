@@ -64,7 +64,7 @@ class PluggableBotProto(irc.IRCClient):
 
     @property
     def nickname(self):
-        return self.factory.nickname
+        return "ReactionBot"
 
     @property
     def channel(self):
