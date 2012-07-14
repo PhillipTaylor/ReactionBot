@@ -1,3 +1,8 @@
+*Phillip Taylor proudly presents...*
+
+The ReactionBot
+===============
+
 ![Techno Cat](https://www.github.com/PhillipTaylor/ReactionBot/raw/master/TheReactionBot.gif)
 
 The ReactionBot is an IRC client written in Python. It sits in channels like any other
