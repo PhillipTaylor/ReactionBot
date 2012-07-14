@@ -1,5 +1,4 @@
-
-![Techno Cat](TheReactionBot.gif)
+![Techno Cat](https://www.github.com/PhillipTaylor/ReactionBot/raw/master/TheReactionBot.gif)
 
 The ReactionBot is an IRC client written in Python. It sits in channels like any other
 IRC bot and replies with links to hilarious gifs for phrases you've set up.
