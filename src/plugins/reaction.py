@@ -9,6 +9,7 @@ from core.plugins.interface import IActionHandler, IFinalize, IPeriodic
 from core.plugins.manager import plugin_manager
 
 SPEAK_INTERVAL = 3 * 60 # only speak every 3 minutes. make it more valuable!
+RELOAD_INTERVAL = 15 * 60 # reload file every 15 minutes
 
 class Reaction(object):
     implements(IActionHandler)
@@ -20,8 +21,20 @@ class Reaction(object):
 
     def __init__(self, name, gifs_filename):
         self.name = 'plugin.' + name
-        
-        logfile = open(gifs_filename, 'r')
+        self.gifs_filename = gifs_filename
+        self.last_reload = None
+
+    def parse_file(self):
+
+        if self.last_reload != None:
+
+            diff = self.last_reload - datetime.datetime.now()
+            if (diff < RELOAD_INTERVAL):
+                return
+
+        self.image_dictionary = {}
+        logfile = open(self.gifs_filename, 'r')
+
         for line in logfile:
             line = line[:-1] # remove trailing new line
             if line not in (None, ''):
@@ -32,6 +45,7 @@ class Reaction(object):
                     self.image_dictionary[match_string] = urls.split(' ')
 
         logfile.close()
+        self.last_reload = datetime.datetime.now()
         print "%d images available" % len(self.image_dictionary)
 
     def accepts_action(self, action):
@@ -39,6 +53,8 @@ class Reaction(object):
 
     def handle_action(self, protocol, action, user, message):
         nick = user.split("!", 1)[0]
+
+        self.parse_file()
 
         for key in self.image_dictionary.keys():
             if (message.lower().find(key.lower()) != -1):
@@ -78,5 +94,5 @@ class Reaction(object):
         self.last_message = datetime.datetime.now()
         self.last_match = match
 
-reaction = Reaction('reaction', 'data/reactions.txt')
+reaction = Reaction('reaction', 'data/reactions2.txt')
 plugin_manager.register(reaction)
