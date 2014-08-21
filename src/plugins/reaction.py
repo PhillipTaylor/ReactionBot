@@ -29,7 +29,7 @@ class Reaction(object):
         if self.last_reload != None:
 
             diff = self.last_reload - datetime.datetime.now()
-            if (diff < RELOAD_INTERVAL):
+            if (diff.seconds < RELOAD_INTERVAL):
                 return
 
         self.image_dictionary = {}
