@@ -28,7 +28,7 @@ class Reaction(object):
 
         if self.last_reload != None:
 
-            diff = self.last_reload - datetime.datetime.now()
+            diff = datetime.datetime.now() - self.last_reload
             if (diff.seconds < RELOAD_INTERVAL):
                 return
 
